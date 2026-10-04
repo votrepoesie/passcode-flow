@@ -1,0 +1,188 @@
+/* ============================================================
+   Design tokens — drop-in CSS layer (primitives).
+
+   Brand-agnostic starter palette built on the Tailwind ramps:
+     - neutral  → Tailwind stone   (surfaces, text, borders)
+     - brand    → Tailwind blue    (accent: focus ring, links, CTA)
+     - success  → Tailwind green
+     - warning  → Tailwind amber
+     - danger   → Tailwind red
+
+   To re-skin for a company: swap the hex values in the `brand` ramp
+   (and `neutral`, if the brand wants a cooler/warmer grey). Every
+   semantic token in ds-theme.css points at these ramps, so nothing
+   else needs to change.
+
+   Fonts (load in your page/layout — not loaded here so importing
+   this file never triggers network requests):
+     - Geist       400/500/600  → --ds-font-sans
+     - Geist Mono  400/500      → --ds-font-mono   (code only)
+
+   Two layers only: these primitives (colour-named base + 50→950 ramps),
+   and the shadcn semantic tokens in ds-theme.css that point straight at
+   them. Every name carries the --ds- prefix so the file drops into any
+   project (run `npm run rebrand <prefix>` to change it).
+   ============================================================ */
+
+:root,
+.ds,
+.ds-skin {
+  /* ----- Base colours ----- */
+  --ds-white: #FFFFFF;
+  --ds-black: #000000;
+
+  /* ----- Neutral ramp (Tailwind stone) -----
+     Light theme: 50 page, 100 cards/muted, 200 borders, 500 supporting
+     text, 900 ink + primary button. Dark theme mirrors it (950 page). */
+  --ds-neutral-50:  #FAFAF9;
+  --ds-neutral-100: #F5F5F4;
+  --ds-neutral-200: #E7E5E4;
+  --ds-neutral-300: #D6D3D1;
+  --ds-neutral-400: #A8A29E;
+  --ds-neutral-500: #78716C;
+  --ds-neutral-600: #57534E;
+  --ds-neutral-700: #44403C;
+  --ds-neutral-800: #292524;
+  --ds-neutral-900: #1C1917;
+  --ds-neutral-950: #0C0A09;
+
+  /* ----- Brand ramp (Tailwind blue) — the swap point for a company's
+     brand colour. Used sparingly: focus ring, links, the `cta` button,
+     selected/active highlights. The primary button stays neutral. ----- */
+  --ds-brand-50:  #EFF6FF;
+  --ds-brand-100: #DBEAFE;
+  --ds-brand-200: #BFDBFE;
+  --ds-brand-300: #93C5FD;
+  --ds-brand-400: #60A5FA;
+  --ds-brand-500: #3B82F6;
+  --ds-brand-600: #2563EB;
+  --ds-brand-700: #1D4ED8;
+  --ds-brand-800: #1E40AF;
+  --ds-brand-900: #1E3A8A;
+  --ds-brand-950: #172554;
+
+  /* ----- Status ramps ----- */
+  --ds-success-50:  #F0FDF4;
+  --ds-success-100: #DCFCE7;
+  --ds-success-200: #BBF7D0;
+  --ds-success-300: #86EFAC;
+  --ds-success-400: #4ADE80;
+  --ds-success-500: #22C55E;
+  --ds-success-600: #16A34A;
+  --ds-success-700: #15803D;
+  --ds-success-800: #166534;
+  --ds-success-900: #14532D;
+  --ds-success-950: #052E16;
+
+  --ds-warning-50:  #FFFBEB;
+  --ds-warning-100: #FEF3C7;
+  --ds-warning-200: #FDE68A;
+  --ds-warning-300: #FCD34D;
+  --ds-warning-400: #FBBF24;
+  --ds-warning-500: #F59E0B;
+  --ds-warning-600: #D97706;
+  --ds-warning-700: #B45309;
+  --ds-warning-800: #92400E;
+  --ds-warning-900: #78350F;
+  --ds-warning-950: #451A03;
+
+  --ds-danger-50:  #FEF2F2;
+  --ds-danger-100: #FEE2E2;
+  --ds-danger-200: #FECACA;
+  --ds-danger-300: #FCA5A5;
+  --ds-danger-400: #F87171;
+  --ds-danger-500: #EF4444;
+  --ds-danger-600: #DC2626;
+  --ds-danger-700: #B91C1C;
+  --ds-danger-800: #991B1B;
+  --ds-danger-900: #7F1D1D;
+  --ds-danger-950: #450A0A;
+
+  /* ----- Spacing ----- */
+  --ds-space-12: 12px;         /* button pad-y */
+  --ds-space-32: 32px;         /* button pad-x */
+  --ds-space-40: 40px;         /* page side margins */
+  --ds-space-48: 48px;         /* section-heading rhythm */
+  --ds-space-section: 180px;   /* between major sections */
+  --ds-space-card-gap: 20px;
+  --ds-space-card-pad: 24px;
+  --ds-canvas-max: 1440px;
+  --ds-content-max: 1360px;
+
+  /* ----- Radius (base; the sm→xl scale derives from --radius) ----- */
+  --ds-radius: 0.5rem;         /* 8px */
+
+  /* ----- Font stacks ----- */
+  --ds-font-sans:  "Geist", ui-sans-serif, system-ui, sans-serif;
+  --ds-font-mono:  "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ----- Type ramp ----- */
+  --ds-text-body-xl:    1.25rem;   /* 20 */
+  --ds-text-body-lg:    1.125rem;  /* 18 */
+  --ds-text-body-md:    1rem;      /* 16 */
+  --ds-text-label-md:   0.875rem;  /* 14 */
+  --ds-text-label-sm:   0.75rem;   /* 12 */
+
+  --ds-leading-body:        1.5;
+  --ds-leading-label:       1.25;
+  --ds-leading-label-tight: 1.1;
+
+  --ds-tracking:          0em;      /* body — Geist is spaced for text sizes */
+  --ds-tracking-heading: -0.02em;   /* display / headings */
+
+  /* ----- Motion -------------------------------------------------
+     Strong curves; the CSS built-ins are too weak to read as
+     deliberate. Everything entering or exiting uses ease-out —
+     it starts fast, so it feels quicker than the same duration
+     spent easing in. Durations follow the UI budget: nothing over
+     300ms, and an exit is always quicker than its entrance
+     (the entrance is the part the user is waiting on). ----- */
+  --ds-ease-out:        cubic-bezier(0.23, 1, 0.32, 1);
+  --ds-ease-in-out:     cubic-bezier(0.77, 0, 0.175, 1);
+
+  --ds-duration-press:  150ms;  /* button press feedback   */
+  --ds-duration-enter:  160ms;  /* menus, popovers, tooltips */
+  --ds-duration-exit:   120ms;  /* their dismissal          */
+
+  /* Modals get a slower pair than menus: the surface is far larger, and it
+     isn't anchored to a trigger the eye is already resting on, so 160ms
+     reads as a flicker rather than an arrival. Still inside the 300ms
+     budget, and the exit still undercuts the entrance. */
+  --ds-duration-modal-enter: 220ms;  /* dialogs, drawers      */
+  --ds-duration-modal-exit:  160ms;  /* their dismissal       */
+}
+
+/* ----- Type pattern classes ----- */
+.ds-body-xl,
+.ds-body-lg,
+.ds-body-md {
+  font-family: var(--ds-font-sans);
+  font-weight: 400;
+  line-height: var(--ds-leading-body);
+  letter-spacing: var(--ds-tracking);
+}
+.ds-body-xl { font-size: var(--ds-text-body-xl); }
+.ds-body-lg { font-size: var(--ds-text-body-lg); }
+.ds-body-md { font-size: var(--ds-text-body-md); }
+
+/* Labels: sentence case, medium weight, same face as body. */
+.ds-label-md,
+.ds-label-sm {
+  font-family: var(--ds-font-sans);
+  font-weight: 500;
+  line-height: var(--ds-leading-label);
+  letter-spacing: var(--ds-tracking);
+}
+.ds-label-md { font-size: var(--ds-text-label-md); }
+.ds-label-sm { font-size: var(--ds-text-label-sm); }
+
+/* Opt-in base: wrap a region in .ds-skin to get the page background +
+   ink + body type defaults without touching the rest of the page. */
+.ds-skin {
+  background: var(--ds-neutral-50);
+  color: var(--ds-neutral-900);
+  font-family: var(--ds-font-sans);
+  font-size: var(--ds-text-body-md);
+  line-height: var(--ds-leading-body);
+  letter-spacing: var(--ds-tracking);
+}

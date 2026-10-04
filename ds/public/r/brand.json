@@ -1,0 +1,14 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "brand",
+  "type": "registry:lib",
+  "title": "Brand",
+  "description": "Brand identity (display name) read by branded components like TopNav.",
+  "files": [
+    {
+      "path": "lib/brand.ts",
+      "content": "/** Brand identity for this design system. `npm run rebrand` rewrites this\n *  file (plus the `--ds-` token prefix and `.ds` scope class) when scaffolding\n *  a design system for a new company or project. */\nexport const brand = {\n  /** Display name — shown in the nav, page titles, and the top-nav mark. */\n  name: \"Acme\",\n  /** One-line description used in page metadata. */\n  description: \"Design tokens, theme, and components — shadcn registry + playground\",\n} as const;\n",
+      "type": "registry:lib"
+    }
+  ]
+}

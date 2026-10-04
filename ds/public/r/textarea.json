@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "textarea",
+  "type": "registry:ui",
+  "title": "Textarea",
+  "description": "Multi-line text field. Built-in error handling: pass label / hint / error / errorAction / meta for the label line (error in the hint's place, label turns red, no layout shift); without them it's a bare control.",
+  "registryDependencies": [
+    "https://design-system.example.com/r/utils.json",
+    "https://design-system.example.com/r/field.json"
+  ],
+  "files": [
+    {
+      "path": "components/ui/textarea.tsx",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\n\nimport { cn } from \"@/lib/utils\"\nimport { FieldSlot, splitFieldProps, useFieldControl, type FieldSlotProps } from \"@/components/ui/field\"\n\n/**\n * Multi-line text field. Pass `label`, `hint`, `error`, `errorAction` or\n * `meta` (e.g. a character count) for the built-in DS label line;\n * without them it's a bare control.\n * `error` is API-agnostic — a plain string: any non-empty string shows it,\n * `undefined` or `\"\"` clears it. Map your API/form library's shape to it.\n */\nfunction Textarea(props: React.ComponentProps<\"textarea\"> & FieldSlotProps) {\n  const [field, control] = splitFieldProps(props)\n  // Inside an InputGroup the group is the field — never wrap the inner control.\n  if ((control as Record<string, unknown>)[\"data-slot\"] === \"input-group-control\") {\n    return <TextareaControl {...control} />\n  }\n  return (\n    <FieldSlot field={field} id={control.id}>\n      <TextareaControl {...control} />\n    </FieldSlot>\n  )\n}\n\nfunction TextareaControl({ className, ...rest }: React.ComponentProps<\"textarea\">) {\n  // Inside a Field, picks up its id / aria-invalid / aria-describedby.\n  const props = useFieldControl(rest)\n  return (\n    <textarea\n      data-slot=\"textarea\"\n      className={cn(\n        \"flex field-sizing-content min-h-16 w-full rounded-md border border-border bg-transparent px-3 py-2 text-base transition-[color,box-shadow,border-color] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive-text aria-invalid:ring-destructive-text/25 md:text-sm dark:bg-input/30\",\n        className\n      )}\n      {...props}\n    />\n  )\n}\n\nexport { Textarea }\n",
+      "type": "registry:ui"
+    }
+  ]
+}

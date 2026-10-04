@@ -1,0 +1,243 @@
+@import "tailwindcss";
+
+/* The DS theme layer (tokens + .ds / .dark shadcn mapping). This is
+   the exact file the registry ships as `ds-theme` — one source of truth
+   for the app playground and every consuming prototype. */
+@import "./ds-theme.css";
+
+/* PanelChat surface paint. Ships to consumers via the `panel-chat` registry
+   entry alongside the component. */
+@import "./panel-chat.css";
+
+/* Drive Tailwind's `dark:` variant off the `.dark` class (the app's theme
+   toggle) instead of the default `prefers-color-scheme` media query — so
+   `dark:` utilities (e.g. the code block's shiki dark tokens) track the
+   in-app theme, not the OS setting. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Base theme ──────────────────────────────────────────────────────────
+   Page base tracks the background token (stone-50 → stone-950) so the
+   surface behind/around `.ds` regions flips with the light/dark switch.
+   The `.dark` class lands on <html> (see use-theme.ts) alongside each
+   `.ds` wrapper. */
+:root {
+  --background: var(--ds-neutral-50);
+  --foreground: var(--ds-neutral-900);
+  color-scheme: light;
+}
+.dark {
+  --background: var(--ds-neutral-950);
+  --foreground: var(--ds-neutral-50);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  /* UI faces: Geist for everything, Geist Mono for code. */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Type steps — rem so they scale with the root font-size, and named so every
+     product surface shares one scale. Two faces only: Geist (--font-sans)
+     for titles + body, Geist Mono (--font-mono) for labels + code. See the live
+     guide at /playground/typography.
+     text-xs (12) / text-sm (14) / text-base (16) stay Tailwind defaults. */
+  --text-label: 0.75rem;     /* 12px — nav / tab / eyebrow labels */
+  --text-body: 0.9375rem;    /* 15px — primary in-product body / options */
+}
+
+/* Streaming "thinking" shimmer: a brighter ink highlight sweeps across
+   secondary-grey text. Explicit -webkit- prefixes so the clip applies in
+   Chrome/Safari (without them the fill covers the whole box and
+   text-transparent hides the text). */
+@keyframes ds-text-shimmer {
+  0% { background-position: 100% center; }
+  100% { background-position: 0% center; }
+}
+.text-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--muted-foreground) 0%,
+    var(--muted-foreground) 42%,
+    var(--foreground) 50%,
+    var(--muted-foreground) 58%,
+    var(--muted-foreground) 100%
+  );
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: ds-text-shimmer 1.8s linear infinite;
+}
+/* Reduced motion: no sweep. Fall back to solid muted-grey text so the meaning
+   (secondary/"working") survives without any movement. */
+@media (prefers-reduced-motion: reduce) {
+  .text-shimmer {
+    animation: none;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--muted-foreground);
+  }
+}
+
+html {
+  /* 1.0625rem = 17px base (relative to the browser default, so it still
+     respects user font-size prefs). Matches consuming product surfaces
+     (e.g. a product app); the rem type steps + spacing render at in-product size. */
+  font-size: 1.0625rem;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), var(--ds-font-sans);
+}
+
+/* ── Rendered markdown (docs pages) ──────────────────────────────────────
+   Deliberately driven by the type tokens so the docs double as a live test
+   of the scale: body copy is text-base (16px), code is mono, tables use
+   text-label headers. Flat, no side-stripes. */
+.doc-prose {
+  font-size: 1rem;                       /* 16px — text-base */
+  font-weight: 400;                      /* Geist Regular for body copy */
+  line-height: 1.6;
+  color: var(--foreground);
+  max-width: 68ch;                       /* readable measure, applied once at the
+                                            container so every child shares it */
+}
+.doc-prose > :first-child { margin-top: 0; }
+.doc-prose h1,
+.doc-prose h2,
+.doc-prose h3,
+.doc-prose h4 {
+  font-family: var(--font-geist-sans), var(--ds-font-sans);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--foreground);
+  /* Clear the sticky top nav (h-12) when jumped to via a TOC anchor. */
+  scroll-margin-top: 4.5rem;
+}
+.doc-prose h1 { font-size: 1.75rem; margin: 0 0 0.6em; }
+.doc-prose h2 { font-size: 1.5rem; margin: 1.9em 0 0.5em; }
+.doc-prose h3 { font-size: 1.25rem; margin: 1.6em 0 0.4em; }
+.doc-prose h4 { font-size: 1rem; margin: 1.4em 0 0.3em; }
+.doc-prose p,
+.doc-prose li { font-size: 1rem; }
+.doc-prose p { margin: 0 0 1em; }
+.doc-prose ul,
+.doc-prose ol { margin: 0 0 1em; padding-left: 1.4em; }
+.doc-prose li { margin: 0.3em 0; }
+.doc-prose ul { list-style: disc; }
+.doc-prose ol { list-style: decimal; }
+.doc-prose li::marker { color: var(--muted-foreground); }
+.doc-prose strong { font-weight: 500; color: var(--foreground); }
+.doc-prose a {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--border);
+}
+.doc-prose a:hover { text-decoration-color: var(--foreground); }
+.doc-prose code {
+  font-family: var(--font-geist-mono), var(--ds-font-mono);
+  font-size: var(--text-sm);
+  background: var(--secondary);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+}
+.doc-prose pre {
+  background: var(--card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 1em 1.1em;
+  overflow-x: auto;
+  margin: 0 0 1.2em;
+}
+.doc-prose pre code { background: none; padding: 0; font-size: var(--text-sm); }
+.doc-prose blockquote {
+  background: var(--secondary);
+  border-radius: var(--radius);
+  padding: 0.9em 1.1em;
+  margin: 0 0 1.2em;
+  color: var(--muted-foreground);
+}
+.doc-prose blockquote p:last-child { margin-bottom: 0; }
+.doc-prose hr { border: 0; border-top: 1px solid var(--border-subtle); margin: 2.2em 0; }
+.doc-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 1.4em;
+  font-size: var(--text-sm);
+}
+.doc-prose th {
+  font-size: var(--text-label);
+  text-align: left;
+  color: var(--muted-foreground);
+  font-weight: 500;
+  padding: 0.55em 0.9em;
+  border-bottom: 1px solid var(--border);
+}
+.doc-prose td {
+  padding: 0.55em 0.9em;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+.doc-prose td code { font-size: 0.8125rem; }
+.doc-prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 0 1.4em;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  cursor: zoom-in;                 /* click opens the doc image gallery */
+}
+
+/* ── shadcn surface token ───────────────────────────────────────────────
+   Vendored shadcn primitives (message, bubble, message-scroller) reference
+   `bg-muted-surface`. Some downstream repos treat `--muted` as a gray INK
+   used with opacity, so their vendored copies alias `muted-surface` to keep
+   shadcn's "subtle opaque surface" meaning intact. DS's `--muted` IS
+   already a surface (neutral-100 / neutral-800), so here the alias is a
+   pass-through — kept so the primitive source stays byte-identical across
+   repos and future upstream syncs are painless. */
+@theme inline {
+  --color-muted-surface: var(--muted);
+}
+
+/* ── Utilities the vendored shadcn message primitives reference ─────────
+   Additive: no existing markup uses these class names. */
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+}
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  &::-webkit-scrollbar-thumb,
+  &::-webkit-scrollbar-track {
+    display: none;
+  }
+}
+@utility scrollbar-gutter-stable {
+  scrollbar-gutter: stable;
+}
+/* Softens the bottom edge of a scroll viewport so streamed text fades out
+   rather than being guillotined by the composer. */
+@utility scroll-fade-b {
+  mask-image: linear-gradient(
+    to bottom,
+    black calc(100% - 2rem),
+    transparent 100%
+  );
+}
