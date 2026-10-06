@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion, useAnimate, useReducedMotion } from "motion/react";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Keycap } from "@/components/keycap";
 import { cn } from "@/lib/utils";
 
 const LENGTH = 4;
@@ -12,8 +13,6 @@ const VERIFY_MS = 1500;
 const NOTICE_MS = 2000;
 const NUMBERS_ONLY = "Numbers only (0–9)";
 const INCOMPLETE = `Enter all ${LENGTH} digits`;
-// Enter is the only way to submit and the design has no button, so say so.
-const READY = "Press Enter to verify";
 
 // Same curves as the Field's message, so every part of the flow moves alike.
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
@@ -44,6 +43,8 @@ export function Passcode() {
   // Code just completed: nothing left to type, so the focused cell drops its
   // "type here" highlight (focus stays for Enter/Backspace) until the next edit.
   const [ready, setReady] = useState(false);
+  // Counts Enter presses so the on-screen keycap can dip with the real key.
+  const [enterPresses, setEnterPresses] = useState(0);
   const noticeTimer = useRef<number | undefined>(undefined);
 
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
@@ -133,6 +134,7 @@ export function Passcode() {
       if (inputs.current.includes(e.target as HTMLInputElement)) return;
       if (e.key === "Enter") {
         e.preventDefault();
+        setEnterPresses((n) => n + 1);
         submit();
         return;
       }
@@ -151,6 +153,7 @@ export function Passcode() {
     switch (e.key) {
       case "Enter":
         e.preventDefault();
+        setEnterPresses((n) => n + 1);
         submit();
         return;
       case "Backspace":
@@ -235,6 +238,7 @@ export function Passcode() {
   });
 
   const verifying = status === "verifying";
+  const complete = status === "idle" && digits.every((d) => d !== "");
 
   // Field always renders its 20px label row + 8px gap above the
   // control; mb-7 balances it so the cells stay centred as in Figma.
@@ -243,7 +247,7 @@ export function Passcode() {
       id={`${id}-0`}
       label={<span className="sr-only">Passcode</span>}
       error={error ? "Incorrect passcode. Try again." : undefined}
-      hint={notice ?? (status === "idle" && digits.every((d) => d !== "") ? READY : undefined)}
+      hint={notice ?? undefined}
       className="mb-7"
     >
       {/* Figma's Verifying frame sits 1px higher than the other states. */}
@@ -253,28 +257,50 @@ export function Passcode() {
           aria-live="polite"
           className="absolute bottom-full left-1/2 mb-4 flex h-8 -translate-x-1/2 items-center justify-center gap-2 whitespace-nowrap"
         >
-          <AnimatePresence>
-            {verifying && (
-              <motion.div
-                key="verifying"
-                className="flex items-center gap-2"
-                initial={hidden("translateY(4px)")}
-                animate={settled("translateY(0px)")}
-                exit={{ opacity: 0, transition: { duration: 0.12, ease: EASE_EXIT } }}
-                transition={{ duration: 0.2, ease: EASE_OUT }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/spinner.svg"
-                  alt=""
-                  width={32}
-                  height={32}
-                  className="size-8 shrink-0 animate-spin [animation-duration:1.2s] motion-reduce:animate-none"
-                />
-                <p className="text-[24px] leading-[normal] text-ink">Verifying...</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* One slot for the whole story: once the code is complete it asks
+              for Enter, and on Enter the prompt turns into "Verifying...".
+              Stacked in one grid cell so the two crossfade in place. */}
+          <div className="grid place-items-center *:[grid-area:1/1]">
+            <AnimatePresence>
+              {verifying ? (
+                <motion.div
+                  key="verifying"
+                  className="flex items-center gap-2"
+                  initial={hidden("translateY(4px)")}
+                  animate={settled("translateY(0px)")}
+                  exit={{ opacity: 0, transition: { duration: 0.12, ease: EASE_EXIT } }}
+                  transition={{ duration: 0.2, ease: EASE_OUT }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/spinner.svg"
+                    alt=""
+                    width={32}
+                    height={32}
+                    className="size-8 shrink-0 animate-spin [animation-duration:1.2s] motion-reduce:animate-none"
+                  />
+                  <p className="text-[24px] leading-[normal] text-ink">Verifying...</p>
+                </motion.div>
+              ) : complete ? (
+                <motion.p
+                  key="prompt"
+                  className="flex items-center gap-2 text-[20px] leading-[normal] whitespace-nowrap text-ink-disabled"
+                  initial={hidden("translateY(4px)")}
+                  animate={settled("translateY(0px)")}
+                  // Held back 250ms so typing 1234⏎ in one go never flashes it;
+                  // leaves upward as "Verifying..." rises into its place.
+                  transition={{ duration: 0.2, ease: EASE_OUT, delay: 0.25 }}
+                  exit={{
+                    opacity: 0,
+                    ...(reduce ? {} : { transform: "translateY(-4px)", filter: "blur(2px)" }),
+                    transition: { duration: 0.15, ease: EASE_EXIT },
+                  }}
+                >
+                  Press <Keycap presses={enterPresses} className="h-7 text-[16px]" /> to verify
+                </motion.p>
+              ) : null}
+            </AnimatePresence>
+          </div>
         </div>
 
         <div
