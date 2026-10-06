@@ -6,7 +6,9 @@
     "dev": "next dev -p 3020",
     "build": "next build",
     "start": "next start -p 3020",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "playwright test",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -17,6 +19,7 @@
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^20.19.43",
     "@types/react": "^19.3.0",
