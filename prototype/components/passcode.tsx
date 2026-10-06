@@ -10,6 +10,10 @@ const LENGTH = 4;
 const PASSCODE = "1234";
 const VERIFY_MS = 1500;
 const NOTICE_MS = 2000;
+const NUMBERS_ONLY = "Numbers only (0–9)";
+const INCOMPLETE = `Enter all ${LENGTH} digits`;
+// Enter is the only way to submit and the design has no button, so say so.
+const READY = "Press Enter to verify";
 
 // Same curves as the Field's message, so every part of the flow moves alike.
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
@@ -36,7 +40,10 @@ export function Passcode() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState(false);
   const [shakeKey, setShakeKey] = useState(0);
-  const [numbersOnly, setNumbersOnly] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  // Code just completed: nothing left to type, so the focused cell drops its
+  // "type here" highlight (focus stays for Enter/Backspace) until the next edit.
+  const [ready, setReady] = useState(false);
   const noticeTimer = useRef<number | undefined>(undefined);
 
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
@@ -45,16 +52,17 @@ export function Passcode() {
   // Focus requested while inputs are disabled; applied after the next render.
   const pendingFocus = useRef<number | null>(null);
 
-  // Brief "numbers only" hint after a non-numeric key; a digit hides it.
-  const showNumbersOnly = () => {
+  // Brief hint in the Field's label row (non-numeric key, Enter too early);
+  // the next digit hides it.
+  const showNotice = (text: string) => {
     setError(false);
-    setNumbersOnly(true);
+    setNotice(text);
     window.clearTimeout(noticeTimer.current);
-    noticeTimer.current = window.setTimeout(() => setNumbersOnly(false), NOTICE_MS);
+    noticeTimer.current = window.setTimeout(() => setNotice(null), NOTICE_MS);
   };
-  const hideNumbersOnly = () => {
+  const hideNotice = () => {
     window.clearTimeout(noticeTimer.current);
-    setNumbersOnly(false);
+    setNotice(null);
   };
   useEffect(() => () => window.clearTimeout(noticeTimer.current), []);
 
@@ -86,6 +94,7 @@ export function Passcode() {
     const firstEmpty = digitsRef.current.findIndex((d) => d === "");
     if (firstEmpty !== -1) {
       focus(firstEmpty);
+      showNotice(INCOMPLETE);
       return;
     }
 
@@ -107,23 +116,26 @@ export function Passcode() {
     }, VERIFY_MS);
   };
 
-  const isComplete = () => digitsRef.current.every((d) => d !== "");
-
-  // Filling the last empty cell submits right away; Enter remains available.
   const enter = (index: number, digit: string) => {
     setError(false);
-    hideNumbersOnly();
+    hideNotice();
     setDigit(index, digit);
-    if (isComplete()) submit();
-    else if (index < LENGTH - 1) focus(index + 1);
+    if (index < LENGTH - 1) focus(index + 1);
+    setReady(digitsRef.current.every((d) => d !== ""));
   };
 
-  // Typing a digit with nothing focused starts at the first empty cell.
+  // With focus outside the cells, a digit starts at the first empty cell and
+  // Enter still submits.
   useEffect(() => {
     if (status !== "idle") return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (inputs.current.includes(e.target as HTMLInputElement)) return;
+      if (e.key === "Enter") {
+        e.preventDefault();
+        submit();
+        return;
+      }
       if (!/^[0-9]$/.test(e.key)) return;
       e.preventDefault();
       const firstEmpty = digitsRef.current.findIndex((d) => d === "");
@@ -134,6 +146,8 @@ export function Passcode() {
   });
 
   const onKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Any key but Enter is an edit; a digit that completes the code re-arms it.
+    if (e.key !== "Enter") setReady(false);
     switch (e.key) {
       case "Enter":
         e.preventDefault();
@@ -174,7 +188,7 @@ export function Passcode() {
     // still advances; block every other printable key.
     e.preventDefault();
     if (/^[0-9]$/.test(e.key)) enter(index, e.key);
-    else showNumbersOnly();
+    else showNotice(NUMBERS_ONLY);
   };
 
   // Fallback for soft keyboards (e.g. Android) that report keydown as
@@ -183,7 +197,9 @@ export function Passcode() {
   const onChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "");
     if (!value) {
-      if (e.target.value) showNumbersOnly();
+      if (e.target.value) showNotice(NUMBERS_ONLY);
+      // Emptied by a soft-keyboard Backspace: clear the cell.
+      else setDigit(index, "");
       return;
     }
     const caret = e.target.selectionStart ?? value.length;
@@ -195,17 +211,17 @@ export function Passcode() {
     e.preventDefault();
     const pasted = e.clipboardData.getData("text").replace(/\D/g, "");
     if (!pasted) {
-      showNumbersOnly();
+      showNotice(NUMBERS_ONLY);
       return;
     }
     setError(false);
-    hideNumbersOnly();
+    hideNotice();
     const next = [...digitsRef.current];
     const count = Math.min(pasted.length, LENGTH - index);
     for (let i = 0; i < count; i++) next[index + i] = pasted[i];
     commit(next);
-    if (isComplete()) submit();
-    else focus(index + count);
+    focus(index + count);
+    setReady(next.every((d) => d !== ""));
   };
 
   // Reduced motion keeps the fades and drops movement, scale and blur.
@@ -227,7 +243,7 @@ export function Passcode() {
       id={`${id}-0`}
       label={<span className="sr-only">Passcode</span>}
       error={error ? "Incorrect passcode. Try again." : undefined}
-      hint={numbersOnly ? "Numbers only (0–9)" : undefined}
+      hint={notice ?? (status === "idle" && digits.every((d) => d !== "") ? READY : undefined)}
       className="mb-7"
     >
       {/* Figma's Verifying frame sits 1px higher than the other states. */}
@@ -284,7 +300,11 @@ export function Passcode() {
               onKeyDown={(e) => onKeyDown(index, e)}
               onChange={(e) => onChange(index, e)}
               onPaste={(e) => onPaste(index, e)}
-              onFocus={(e) => e.target.select()}
+              onFocus={(e) => {
+                setReady(false);
+                e.target.select();
+              }}
+              onPointerDown={() => setReady(false)}
               // Overrides the Input's size, radius, padding, type and focus
               // ring with the Figma cell; its invalid styling is kept.
               className={cn(
@@ -294,7 +314,9 @@ export function Passcode() {
                 "font-sans text-[36px] leading-[normal] font-medium text-ink caret-transparent md:text-[36px]",
                 "selection:bg-transparent selection:text-ink",
                 cellEdges[index],
-                "focus-visible:z-10 focus-visible:rounded-[4px] focus-visible:border-[3px] focus-visible:border-highlight focus-visible:ring-0 focus-visible:shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] focus-visible:pt-[2px] focus-visible:pl-0 focus-visible:pr-[3px]",
+                ready
+                  ? "focus-visible:border-stroke focus-visible:ring-0"
+                  : "focus-visible:z-10 focus-visible:rounded-[4px] focus-visible:border-[3px] focus-visible:border-highlight focus-visible:ring-0 focus-visible:shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] focus-visible:pt-[2px] focus-visible:pl-0 focus-visible:pr-[3px]",
                 "disabled:bg-fill-disabled disabled:text-ink-disabled disabled:opacity-100 disabled:[-webkit-text-fill-color:var(--color-ink-disabled)]",
                 // Focus moving between cells is keyboard-driven and must be
                 // instant; only greying out on submit eases in.
