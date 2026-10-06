@@ -26,6 +26,8 @@ export function usePasscode() {
   // Code just completed: nothing left to type, so the focused cell drops its
   // "type here" highlight (focus stays for Enter/Backspace) until the next edit.
   const [ready, setReady] = useState(false);
+  // Which cell has focus (null when focus is elsewhere), for the focus ring.
+  const [focused, setFocused] = useState<number | null>(null);
   // Counts Enter presses so the on-screen keycap can dip with the real key.
   const [enterPresses, setEnterPresses] = useState(0);
 
@@ -236,10 +238,15 @@ export function usePasscode() {
     inputs.current[index] = el;
   };
 
-  const onFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+  const onFocus = (index: number, e: React.FocusEvent<HTMLInputElement>) => {
     setReady(false);
+    setFocused(index);
     e.target.select();
   };
+
+  // Moving between cells fires blur then focus in the same batch, so the
+  // ring only ever sees the old and new index, never null in between.
+  const onBlur = () => setFocused(null);
 
   const onPointerDown = () => setReady(false);
 
@@ -253,6 +260,8 @@ export function usePasscode() {
     enterPresses,
     complete: status === "idle" && digits.every((d) => d !== ""),
     /** Event handlers for the cells; wire them per cell index. */
-    cell: { registerCell, onKeyDown, onChange, onPaste, onFocus, onPointerDown },
+    /** Index of the cell showing the focus ring, or null when none should. */
+    ringAt: ready || status !== "idle" ? null : focused,
+    cell: { registerCell, onKeyDown, onChange, onPaste, onFocus, onBlur, onPointerDown },
   };
 }

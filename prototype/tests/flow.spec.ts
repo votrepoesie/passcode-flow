@@ -32,14 +32,24 @@ test("paste fills from the focused cell and waits for Enter", async ({ page }) =
   await expect(page.getByText("Authenticated")).toBeVisible();
 });
 
-test("the focus highlight hides once the code is complete, until the next edit", async ({ page }) => {
-  const border = () => page.evaluate(() => getComputedStyle(document.activeElement!).borderTopWidth);
+test("the focus ring slides to the focused cell and hides once the code is complete", async ({ page }) => {
+  const ring = page.locator("[data-slot=focus-ring]");
+  // Cell index the ring sits over, or "hidden".
+  const ringAt = () =>
+    ring.evaluate((el) => {
+      const style = getComputedStyle(el);
+      if (Number(style.opacity) < 0.5) return "hidden";
+      return Math.round(new DOMMatrix(style.transform).m41 / 84);
+    });
   await cell(page, 1).focus();
+  await expect.poll(ringAt).toBe(0);
   await page.keyboard.type("123");
-  expect(await border()).toBe("3px");
+  await expect.poll(ringAt).toBe(3);
   await page.keyboard.type("4");
   await expect(enterPrompt(page)).toBeVisible();
-  expect(await border()).toBe("1px");
+  await expect.poll(ringAt).toBe("hidden");
   await page.keyboard.press("Backspace");
-  expect(await border()).toBe("3px");
+  await expect.poll(ringAt).toBe(3);
+  await page.mouse.click(100, 100);
+  await expect.poll(ringAt).toBe("hidden");
 });

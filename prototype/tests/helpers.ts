@@ -4,7 +4,9 @@ export const cell = (page: Page, n: number) => page.getByRole("textbox", { name:
 
 /** Comma-joined cell values, e.g. "1,2,,". */
 export const values = (page: Page) =>
-  page.getByRole("textbox", { name: /^Digit \d of 4$/ }).evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value).join(","));
+  page
+    .getByRole("textbox", { name: /^Digit \d of 4$/ })
+    .evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value).join(","));
 
 /** aria-label of the focused element, or "body". */
 export const focused = (page: Page) =>

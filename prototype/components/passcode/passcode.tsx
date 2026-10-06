@@ -6,6 +6,7 @@ import { Field } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 import { CheckIcon } from "./check-icon";
 import { COPY } from "./constants";
+import { FocusRing } from "./focus-ring";
 import { EASE_EXIT, EASE_OUT, useFade } from "./motion";
 import { PasscodeCell } from "./passcode-cell";
 import { StatusSlot } from "./status-slot";
@@ -14,7 +15,7 @@ import { usePasscode } from "./use-passcode";
 export function Passcode() {
   const id = useId();
   const { reduce, hidden, settled } = useFade();
-  const { digits, status, error, notice, shakeKey, ready, enterPresses, complete, cell } = usePasscode();
+  const { digits, status, error, notice, shakeKey, ready, enterPresses, complete, ringAt, cell } = usePasscode();
   const verifying = status === "verifying";
 
   // Passcode → Authenticated is seen once per session, so it gets a little
@@ -60,7 +61,7 @@ export function Passcode() {
                 key={shakeKey}
                 role="group"
                 aria-label="Passcode"
-                className={cn("flex items-center", shakeKey > 0 && "animate-shake motion-reduce:animate-none")}
+                className={cn("relative flex items-center", shakeKey > 0 && "animate-shake motion-reduce:animate-none")}
               >
                 {digits.map((digit, index) => (
                   <PasscodeCell
@@ -74,10 +75,12 @@ export function Passcode() {
                     onKeyDown={(e) => cell.onKeyDown(index, e)}
                     onChange={(e) => cell.onChange(index, e)}
                     onPaste={(e) => cell.onPaste(index, e)}
-                    onFocus={cell.onFocus}
+                    onFocus={(e) => cell.onFocus(index, e)}
+                    onBlur={cell.onBlur}
                     onPointerDown={cell.onPointerDown}
                   />
                 ))}
+                <FocusRing index={ringAt} />
               </div>
             </div>
           </Field>

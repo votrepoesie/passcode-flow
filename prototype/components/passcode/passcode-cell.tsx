@@ -36,9 +36,11 @@ export function PasscodeCell({ index, ready, className, ...props }: PasscodeCell
         "font-sans text-[36px] leading-[normal] font-medium text-ink caret-transparent md:text-[36px]",
         "selection:bg-transparent selection:text-ink",
         edges[index],
-        ready
-          ? "focus-visible:border-stroke focus-visible:ring-0"
-          : "focus-visible:z-10 focus-visible:rounded-[4px] focus-visible:border-[3px] focus-visible:border-highlight focus-visible:ring-0 focus-visible:shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] focus-visible:pt-[2px] focus-visible:pl-0 focus-visible:pr-[3px]",
+        // The green box is the shared FocusRing drawn over the cell; the cell
+        // itself only drops the Input's own focus ring, takes the ring's
+        // radius, and shifts its digit to where Figma puts a focused one.
+        "focus-visible:border-stroke focus-visible:ring-0",
+        !ready && "focus-visible:rounded-[4px] focus-visible:pt-[2px] focus-visible:pl-0 focus-visible:pr-[3px]",
         "disabled:bg-fill-disabled disabled:text-ink-disabled disabled:opacity-100 disabled:[-webkit-text-fill-color:var(--color-ink-disabled)]",
         // Focus moving between cells is keyboard-driven and must be instant;
         // only greying out on submit eases in.

@@ -11,7 +11,9 @@ const BUDGET = { empty: 0, filling: 200, verifying: 700, authenticated: 1100 };
 
 async function differingPixels(page: Page, frame: keyof typeof BUDGET) {
   const shot = await page.screenshot({ animations: "disabled" });
-  const reference = fs.readFileSync(path.join(__dirname, "figma", `figma-${frame === "authenticated" ? "auth" : frame}.png`));
+  const reference = fs.readFileSync(
+    path.join(__dirname, "figma", `figma-${frame === "authenticated" ? "auth" : frame}.png`),
+  );
   return page.evaluate(
     async ([a, b]) => {
       const load = async (src: string) => {
@@ -28,7 +30,8 @@ async function differingPixels(page: Page, frame: keyof typeof BUDGET) {
       const [da, db] = await Promise.all([load(a), load(b)]);
       let n = 0;
       for (let i = 0; i < da.length; i += 4) {
-        if (Math.max(Math.abs(da[i] - db[i]), Math.abs(da[i + 1] - db[i + 1]), Math.abs(da[i + 2] - db[i + 2])) > 24) n++;
+        if (Math.max(Math.abs(da[i] - db[i]), Math.abs(da[i + 1] - db[i + 1]), Math.abs(da[i + 2] - db[i + 2])) > 24)
+          n++;
       }
       return n;
     },
