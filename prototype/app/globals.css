@@ -12,7 +12,7 @@
 
   /* Roles read by components/ui/field.tsx and input.tsx. */
   --color-foreground: #1c1917;
-  --color-muted-foreground: #78716c;
+  --color-muted-foreground: #858585; /* Figma --text-color-disabled */
   --color-border: #e7e5e4;
   --color-ring: #3b82f6;
   --color-secondary: #f5f5f4;
