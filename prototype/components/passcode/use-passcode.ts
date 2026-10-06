@@ -13,7 +13,7 @@ const isDigit = (key: string) => /^[0-9]$/.test(key);
  * State and keyboard behaviour for the passcode flow:
  * - typing a digit fills the cell and advances; other keys show a hint
  * - Backspace/Delete clears the cell, or moves back from an empty one; held,
- *   it keeps clearing backwards one cell per key repeat
+ *   it clears the whole code and returns to the first cell
  * - Enter submits a complete code (or says how many digits are missing)
  */
 export function usePasscode() {
@@ -169,12 +169,15 @@ export function usePasscode() {
       case "Delete":
         e.preventDefault();
         setError(false);
-        if (digitsRef.current[index]) {
+        if (e.repeat) {
+          // Held past the OS repeat delay: clear the whole code and send the
+          // ring back to the first cell.
+          if (digitsRef.current.some((d) => d !== "")) commit(empty());
+          focus(0);
+        } else if (digitsRef.current[index]) {
           setDigit(index, "");
         } else if (index > 0) {
           focus(index - 1);
-          // Holding the key keeps clearing backwards, one cell per repeat.
-          if (e.repeat) setDigit(index - 1, "");
         }
         return;
       case "ArrowLeft":

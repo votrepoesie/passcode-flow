@@ -2,6 +2,8 @@ import { useReducedMotion } from "motion/react";
 
 // Same curves as the Field's message, so every part of the flow moves alike.
 export const EASE_OUT = [0.23, 1, 0.32, 1] as const;
+// For the focus ring gliding across several cells: accelerates, then settles.
+export const EASE_IN_OUT = [0.645, 0.045, 0.355, 1] as const;
 export const EASE_EXIT = [0.25, 0.1, 0.25, 1] as const;
 
 /**

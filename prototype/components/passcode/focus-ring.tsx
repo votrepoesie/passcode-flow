@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { EASE_OUT } from "./motion";
+import { EASE_IN_OUT, EASE_OUT } from "./motion";
 
 const CELL_WIDTH = 84;
 
@@ -10,14 +10,18 @@ const CELL_WIDTH = 84;
  * The green "type here" box, drawn once over the row and slid to the focused
  * cell, so moving between cells reads as one box travelling sideways.
  * It jumps (no slide) when it reappears, so it never sweeps in from wherever
- * it was last, and it fades when no cell should show it.
+ * it was last, and it fades when no cell should show it. A multi-cell move
+ * (e.g. held Backspace clearing back to the first cell) glides a little
+ * longer so the box is seen travelling rather than teleporting.
  */
 export function FocusRing({ index }: { index: number | null }) {
   const reduce = useReducedMotion();
   // Derived from the previous render: slide only between two visible cells.
-  const [track, setTrack] = useState({ index, at: index ?? 0, slide: false });
+  // `cells` is how far it slides; 0 means jump.
+  const [track, setTrack] = useState({ index, at: index ?? 0, cells: 0 });
   if (index !== track.index) {
-    setTrack({ index, at: index ?? track.at, slide: track.index !== null && index !== null });
+    const cells = track.index !== null && index !== null ? Math.abs(index - track.index) : 0;
+    setTrack({ index, at: index ?? track.at, cells });
   }
 
   return (
@@ -29,7 +33,12 @@ export function FocusRing({ index }: { index: number | null }) {
       animate={{ opacity: index === null ? 0 : 1, transform: `translateX(${track.at * CELL_WIDTH}px)` }}
       transition={{
         // Short and interruptible: fast typing redirects it mid-slide.
-        transform: track.slide && !reduce ? { duration: 0.15, ease: EASE_OUT } : { duration: 0 },
+        transform:
+          track.cells > 0 && !reduce
+            ? track.cells > 1
+              ? { duration: 0.12 + 0.06 * track.cells, ease: EASE_IN_OUT }
+              : { duration: 0.15, ease: EASE_OUT }
+            : { duration: 0 },
         opacity: { duration: index === null ? 0.1 : 0 },
       }}
     />

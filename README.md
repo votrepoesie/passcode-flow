@@ -43,7 +43,7 @@ prototype/
 | --- | --- |
 | `0`–`9` | Fills the cell and moves to the next; other keys show "Numbers only (0–9)" |
 | `Enter` | Submits a complete code; an incomplete one shows "Enter all 4 digits" |
-| `Backspace` / `Delete` | Clears the cell; on an empty cell moves back; held, keeps clearing backwards |
+| `Backspace` / `Delete` | Clears the cell; on an empty cell moves back; held, clears the whole code and the focus box glides back to the first cell |
 | `←` `→` `Home` `End` | Move between cells |
 | Paste | Fills from the focused cell, ignoring non-digits |
 

@@ -103,20 +103,28 @@ test.describe("4. On an empty cell, Delete/Backspace moves back", () => {
   });
 });
 
-test.describe("5. Holding Delete/Backspace keeps clearing backwards", () => {
+test.describe("5. Holding Delete/Backspace clears the whole code", () => {
   for (const key of ["Backspace", "Delete"]) {
     test(key, async ({ page }) => {
-      await page.keyboard.type("123");
-      await hold(page, key, 6);
+      await page.keyboard.type("1234");
+      await hold(page, key, 1);
       expect(await values(page)).toBe(",,,");
       await expectFocused(page, "Digit 1 of 4");
     });
   }
 
-  test("one cell per repeat", async ({ page }) => {
+  test("a single press still clears one cell", async ({ page }) => {
     await page.keyboard.type("123");
     await cell(page, 3).focus();
+    await hold(page, "Backspace", 0);
+    expect(await values(page)).toBe("1,2,,");
+  });
+
+  test("clears cells after the focused one too", async ({ page }) => {
+    await page.keyboard.type("1234");
+    await cell(page, 2).focus();
     await hold(page, "Backspace", 1);
-    expect(await values(page)).toBe("1,,,");
+    expect(await values(page)).toBe(",,,");
+    await expectFocused(page, "Digit 1 of 4");
   });
 });
